@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Modelo 3D</title>
+<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+<style>
+:root{
+  --panel-bg:rgba(12,12,12,.72);
+  --panel-border:rgba(255,255,255,.14);
+  --button-bg:rgba(255,255,255,.94);
+  --text:#fff;
+  --muted:rgba(255,255,255,.78);
+  --accent:#ffd33d;
+}
+*{box-sizing:border-box;}
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#111;
+  overscroll-behavior:none;
+}
+model-viewer{
+  width:100%;
+  height:100dvh;
+  min-height:100vh;
+  background:#111;
+  touch-action:none;
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-touch-callout:none;
+}
+.help-panel{
+  position:fixed;
+  left:12px;
+  top:12px;
+  z-index:20;
+  width:min(360px,calc(100vw - 24px));
+  font-family:Arial, Helvetica, sans-serif;
+  color:var(--text);
+  background:var(--panel-bg);
+  border:1px solid var(--panel-border);
+  border-radius:16px;
+  padding:12px;
+  box-shadow:0 10px 30px rgba(0,0,0,.38);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  pointer-events:auto;
+}
+.help-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+.help-title{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-weight:700;
+  letter-spacing:.2px;
+  font-size:15px;
+}
+.help-title .dot{
+  width:10px;
+  height:10px;
+  border-radius:999px;
+  background:var(--accent);
+  box-shadow:0 0 0 4px rgba(255,211,61,.18);
+}
+.help-toggle{
+  border:none;
+  color:#111;
+  background:var(--button-bg);
+  min-width:34px;
+  height:32px;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:800;
+  box-shadow:0 2px 8px rgba(0,0,0,.22);
+  touch-action:manipulation;
+}
+.help-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  margin-bottom:10px;
+}
+.help-chip{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  min-height:58px;
+  border-radius:14px;
+  background:rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.12);
+  text-align:center;
+}
+.help-icon{
+  font-size:22px;
+  line-height:1;
+}
+.help-label{
+  font-size:11px;
+  font-weight:700;
+  color:rgba(255,255,255,.92);
+}
+.instructions{
+  display:grid;
+  gap:6px;
+  font-size:13px;
+  line-height:1.32;
+  color:var(--muted);
+}
+.instructions strong{
+  color:#fff;
+}
+.device-title{
+  color:#fff;
+  font-size:13px;
+  font-weight:700;
+  margin:2px 0 2px;
+}
+.mobile-help{display:none;}
+.help-panel.compact{
+  width:auto;
+  max-width:calc(100vw - 24px);
+  padding:8px;
+}
+.help-panel.compact .help-grid,
+.help-panel.compact .instructions{
+  display:none;
+}
+.help-panel.compact .help-header{
+  margin-bottom:0;
+}
+.help-panel.compact .help-title span:last-child{
+  display:none;
+}
+.zoom-panel{
+  position:fixed;
+  right:12px;
+  bottom:calc(12px + env(safe-area-inset-bottom));
+  z-index:22;
+  display:flex;
+  gap:8px;
+  font-family:Arial, Helvetica, sans-serif;
+}
+.zoom-panel button{
+  font-size:18px;
+  min-width:48px;
+  height:48px;
+  border:none;
+  border-radius:14px;
+  background:var(--button-bg);
+  cursor:pointer;
+  padding:0 13px;
+  font-weight:800;
+  box-shadow:0 4px 14px rgba(0,0,0,.36);
+  touch-action:manipulation;
+}
+.zoom-panel .center-btn{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:14px;
+  min-width:104px;
+}
+.zoom-panel button:active,
+.help-toggle:active{
+  transform:scale(.96);
+}
+@media (pointer:coarse), (max-width:767px){
+  .help-panel{
+    left:10px;
+    top:10px;
+    width:min(340px,calc(100vw - 20px));
+    padding:10px;
+  }
+  .help-grid{
+    grid-template-columns:repeat(4,1fr);
+    gap:6px;
+  }
+  .help-chip{min-height:52px;}
+  .help-icon{font-size:20px;}
+  .help-label{font-size:10px;}
+  .pc-help{display:none;}
+  .mobile-help{display:grid;}
+  .instructions{font-size:12px;}
+  .zoom-panel{
+    left:10px;
+    right:10px;
+    bottom:calc(10px + env(safe-area-inset-bottom));
+    justify-content:center;
+  }
+  .zoom-panel button{
+    min-width:52px;
+    height:50px;
+  }
+  .zoom-panel .center-btn{
+    min-width:112px;
+    justify-content:center;
+  }
+}
+</style>
+</head>
+<body>
+<div id="helpPanel" class="help-panel">
+  <div class="help-header">
+    <div class="help-title"><span class="dot"></span><span>Guía de navegación</span></div>
+    <button id="helpToggle" class="help-toggle" title="Mostrar u ocultar instrucciones">−</button>
+  </div>
+
+  <div class="help-grid" aria-label="Iconos de navegación">
+    <div class="help-chip"><span class="help-icon">✋</span><span class="help-label">Mover</span></div>
+    <div class="help-chip"><span class="help-icon">🔄</span><span class="help-label">Rotar</span></div>
+    <div class="help-chip"><span class="help-icon">🔍+</span><span class="help-label">Acercar</span></div>
+    <div class="help-chip"><span class="help-icon">🔍−</span><span class="help-label">Alejar</span></div>
+  </div>
+
+  <div class="instructions pc-help">
+    <div class="device-title">Controles en PC</div>
+    <div><strong>Rotar:</strong> Clic izquierdo y arrastra.</div>
+    <div><strong>Mover:</strong> Clic derecho y arrastra.</div>
+    <div><strong>Acercar o alejar:</strong> Ruedita del mouse.</div>
+    <div><strong>Centrar:</strong> Presiona el botón Centrar.</div>
+  </div>
+
+  <div class="instructions mobile-help">
+    <div class="device-title">Controles en celular o tablet</div>
+    <div><strong>Rotar:</strong> Un dedo sobre el modelo.</div>
+    <div><strong>Mover:</strong> Dos dedos juntos y arrastra.</div>
+    <div><strong>Acercar o alejar:</strong> Dos dedos, junta o separa.</div>
+    <div><strong>Centrar:</strong> Toca el botón Centrar.</div>
+  </div>
+</div>
+
+<model-viewer
+id="viewer"
+src="modelo.glb"
+camera-controls
+touch-action="none"
+auto-rotate
+shadow-intensity="1"
+exposure="1"
+ar
+bounds="tight"
+camera-target="auto auto auto"
+camera-orbit="45deg 60deg auto"
+field-of-view="30deg"
+min-field-of-view="8deg"
+max-field-of-view="70deg"
+interaction-prompt="auto">
+</model-viewer>
+
+<div class="zoom-panel" aria-label="Controles rápidos">
+<button id="zoomOut" title="Alejar">−</button>
+<button id="centerModel" class="center-btn" title="Centrar modelo"><span>⌖</span><span>Centrar</span></button>
+<button id="zoomIn" title="Acercar">+</button>
+</div>
+
+<script>
+const viewer = document.getElementById("viewer");
+viewer.addEventListener("contextmenu", function(e) { e.preventDefault(); });
+const helpPanel = document.getElementById("helpPanel");
+const helpToggle = document.getElementById("helpToggle");
+
+const ZOOM_MIN_FACTOR = 0.06;
+const ZOOM_STEP = 0.05;
+let viewerConfig = null;
+let modelReady = false;
+
+// viewer_config.json lo genera el publicador. Sirve para ignorar objetos sueltos
+// que quedan muy lejos y dañan el encuadre, especialmente después de optimizar.
+fetch("viewer_config.json", { cache: "no-store" })
+  .then(r => r.ok ? r.json() : null)
+  .then(cfg => {
+    viewerConfig = cfg;
+    if (modelReady) centrarModelo();
+  })
+  .catch(() => { viewerConfig = null; });
+
+function esCelular() {
+  return window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 768;
+}
+
+function ajustarEstadoAyuda() {
+  if (esCelular() && !localStorage.getItem("ayuda3D_estado")) {
+    // En celular queda visible, pero el usuario puede minimizarla si desea más pantalla.
+    helpPanel.classList.remove("compact");
+    helpToggle.textContent = "−";
+  }
+}
+
+const savedHelp = localStorage.getItem("ayuda3D_estado");
+if (savedHelp === "compact") {
+  helpPanel.classList.add("compact");
+  helpToggle.textContent = "+";
+}
+ajustarEstadoAyuda();
+
+helpToggle.addEventListener("click", function() {
+  helpPanel.classList.toggle("compact");
+  const compact = helpPanel.classList.contains("compact");
+  helpToggle.textContent = compact ? "+" : "−";
+  localStorage.setItem("ayuda3D_estado", compact ? "compact" : "open");
+});
+
+function dimsDesdeViewer() {
+  try {
+    const d = viewer.getDimensions();
+    return [Math.abs(d.x || 1), Math.abs(d.y || 1), Math.abs(d.z || 1)];
+  } catch (e) {
+    return [1, 1, 1];
+  }
+}
+
+function dimsActuales() {
+  if (viewerConfig && Array.isArray(viewerConfig.dimensions) && viewerConfig.dimensions.length >= 3) {
+    return viewerConfig.dimensions.map(v => Math.max(Math.abs(Number(v) || 0), 0.001));
+  }
+  return dimsDesdeViewer();
+}
+
+function maxDimension() {
+  const d = dimsActuales();
+  return Math.max(d[0] || 1, d[1] || 1, d[2] || 1, 1);
+}
+
+function centroActual() {
+  if (viewerConfig && Array.isArray(viewerConfig.center) && viewerConfig.center.length >= 3) {
+    return viewerConfig.center.map(v => Number(v) || 0);
+  }
+  try {
+    const c = viewer.getBoundingBoxCenter();
+    return [c.x || 0, c.y || 0, c.z || 0];
+  } catch (e) {
+    return [0, 0, 0];
+  }
+}
+
+function radioEncuadre() {
+  const maxDim = maxDimension();
+  const factor = esCelular() ? 2.65 : 1.95;
+  return Math.max(maxDim * factor, 1.5);
+}
+
+function actualizarLimitesZoom(radius) {
+  const maxDim = maxDimension();
+  const minRadius = Math.max(maxDim * ZOOM_MIN_FACTOR, 0.03);
+  const maxRadius = Math.max(maxDim * 40, radius * 4, 20);
+
+  viewer.setAttribute("min-camera-orbit", `auto auto ${minRadius}m`);
+  viewer.setAttribute("max-camera-orbit", `auto auto ${maxRadius}m`);
+
+  return { minRadius, maxRadius };
+}
+
+function centrarModelo() {
+  try {
+    const c = centroActual();
+    const radius = radioEncuadre();
+    actualizarLimitesZoom(radius);
+
+    viewer.cameraTarget = `${c[0]}m ${c[1]}m ${c[2]}m`;
+    viewer.cameraOrbit = `45deg 60deg ${radius}m`;
+
+    if (viewer.jumpCameraToGoal) viewer.jumpCameraToGoal();
+  } catch (e) {
+    console.log("Centrar modelo no disponible todavía", e);
+  }
+}
+
+viewer.addEventListener("load", function() {
+  modelReady = true;
+  setTimeout(centrarModelo, 250);
+  setTimeout(centrarModelo, 900);
+});
+
+let resizeTimer = null;
+window.addEventListener("resize", function() {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(function() {
+    ajustarEstadoAyuda();
+    centrarModelo();
+  }, 300);
+});
+
+function aplicarZoom(factor) {
+  try {
+    const orbit = viewer.getCameraOrbit();
+    let radius = (orbit.radius || radioEncuadre()) * factor;
+    const limits = actualizarLimitesZoom(radius);
+
+    if (radius < limits.minRadius) radius = limits.minRadius;
+    if (radius > limits.maxRadius) radius = limits.maxRadius;
+
+    viewer.cameraOrbit = `${orbit.theta}rad ${orbit.phi}rad ${radius}m`;
+  } catch (e) {
+    console.log("Zoom no disponible todavía", e);
+  }
+}
+
+// PC: Zoom suave con rueda. Celular queda libre para el control nativo con dedos.
+viewer.addEventListener("wheel", function(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const factor = e.deltaY > 0 ? (1 + ZOOM_STEP) : (1 - ZOOM_STEP);
+  aplicarZoom(factor);
+}, { passive: false, capture: true });
+
+document.getElementById("zoomIn").addEventListener("click", function() {
+  aplicarZoom(1 - ZOOM_STEP);
+});
+
+document.getElementById("zoomOut").addEventListener("click", function() {
+  aplicarZoom(1 + ZOOM_STEP);
+});
+
+document.getElementById("centerModel").addEventListener("click", function() {
+  centrarModelo();
+});
+
+document.getElementById("centerModel").addEventListener("touchend", function(e) {
+  e.preventDefault();
+  centrarModelo();
+}, { passive: false });
+</script>
+
+</body>
+</html>
