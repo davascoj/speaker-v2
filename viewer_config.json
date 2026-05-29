@@ -1,0 +1,21 @@
+{
+  "center": [
+    -0.18,
+    0.2125,
+    -0.235
+  ],
+  "dimensions": [
+    0.36,
+    0.455,
+    0.5
+  ],
+  "totalDimensions": [
+    0.36,
+    0.455,
+    0.5
+  ],
+  "nodesDetected": 97,
+  "outliersDetected": 0,
+  "outlierNodeNames": [],
+  "note": "Centro calculado por el publicador para encuadrar el modelo en web y celular."
+}
